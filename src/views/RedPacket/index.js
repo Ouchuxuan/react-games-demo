@@ -90,6 +90,10 @@ export default function RedPacket(props) {
       console.log('canvasHeight0000', canvasHeight)
 
 
+      // 加了这句就行了------------------------------
+      if (timeId.current) {
+        cancelAnimationFrame(timeId.current)
+      }
       //这个move方法是否被覆盖了 
       const move = () => {
         console.log('canvasHeight1111', canvasHeight)
@@ -114,14 +118,14 @@ export default function RedPacket(props) {
             ctx.drawImage(item.img, item.x, item.y)
           })
           if (timeId.current) {
-            clearTimeout(timeId.current)
+            cancelAnimationFrame(timeId.current)
           }
-          window.setTimeout(move, 4000)
+          timeId.current = window.requestAnimationFrame(move)
         }
       }
 
-      // timeId.current = window.requestAnimationFrame(move)
-      timeId.current = setTimeout(move, 4000)
+      timeId.current = window.requestAnimationFrame(move)
+      // timeId.current = setTimeout(move, 4000)
     })
   }, [canvasWidth, canvasHeight])
 
