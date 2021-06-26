@@ -57,12 +57,15 @@ const getImage = (imageSource) => {
 
 
 export default function RedPacket(props) {
+  // 注：如果要向requestAnimateFrame插入新的canvas绘制，可能要用taskList来存储绘制方法
   const container = useRef(null);
   const canvas = useRef(null);
   // 挂载requestAnimateFrameID
   const timeId = useRef(null);
   // 挂载pkgList
   const pkgList = useRef(null);
+  // 挂在canvasConext
+  const ctx = useRef(null)
   const [canvasWidth, setCanvasWidth] = useState(0)
   const [canvasHeight, setCanvasHeight] = useState(0)
 
@@ -73,20 +76,22 @@ export default function RedPacket(props) {
     }
   }
 
-  // const drawText = (canvasContext) => {
+  const drawText = (canvasContext, text, x, y) => {
+    canvasContext.font = "20px Georgia";
+    canvasContext.fillText(text, x, y);
+  }
 
-  // }
-
-  const hitTest = (mouseX, mouseY) => {
-    pkgList.current.forEach(item => {
+  const hitTest = (mouseX, mouseY, callBack = () => { }) => {
+    for (let i = 0; i < pkgList.current.length; i++) {
       // X 轴命中
-      const hitX = ((mouseX - item.x) <= pkgWidth) && ((mouseX - item.x) > 0);
+      const hitX = ((mouseX - pkgList.current[i].x) <= pkgWidth) && ((mouseX - pkgList.current[i].x) > 0);
       // Y 轴命中
-      const hitY = ((mouseY - item.y) <= pkgHeight) && ((mouseY - item.y) > 0);
+      const hitY = ((mouseY - pkgList.current[i].y) <= pkgHeight) && ((mouseY - pkgList.current[i].y) > 0);
       if (hitX && hitY) {
-        console.log('命中了')
+        callBack(pkgList.current[i]);
+        break;
       }
-    })
+    }
 
   }
 
@@ -116,7 +121,7 @@ export default function RedPacket(props) {
   useEffect(() => {
 
     const { width, height } = container.current.getBoundingClientRect();
-    const ctx = canvas.current.getContext('2d');
+    ctx.current = canvas.current.getContext('2d');
     setCanvasWidth(width);
     setCanvasHeight(height);
 
@@ -132,10 +137,10 @@ export default function RedPacket(props) {
         }
       })
       pkgList.current.forEach(item => {
-        ctx.drawImage(item.img, item.x, item.y)
+        ctx.current.drawImage(item.img, item.x, item.y)
       })
       clearAnimate()
-      timeId.current = window.requestAnimationFrame(() => { move(ctx) })
+      timeId.current = window.requestAnimationFrame(() => { move(ctx.current) })
     })
     // 清除副作用
     return () => {
@@ -148,12 +153,11 @@ export default function RedPacket(props) {
 
   const handleClick = useCallback(
     (event) => {
-      console.log(event);
-      console.log(pkgList.current)
-      // clearAnimate()
       const { nativeEvent: { offsetX, offsetY } } = event;
-      hitTest(offsetX, offsetY);
-      clearAnimate()
+      hitTest(offsetX, offsetY, (pkgItem) => {
+        console.log('击中', pkgItem)
+      });
+      // clearAnimate()
     }, [])
 
 
