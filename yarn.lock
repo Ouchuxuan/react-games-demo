@@ -3715,16 +3715,6 @@ create-hmac@^1.1.0, create-hmac@^1.1.4, create-hmac@^1.1.7:
     safe-buffer "^5.0.1"
     sha.js "^2.4.8"
 
-createjs-cmd@^0.1.0:
-  version "0.1.0"
-  resolved "http://npm.fxwork.kugou.net:80/createjs-cmd/-/createjs-cmd-0.1.0.tgz#2f6199f7b421ed84f92aef331872d9c73ffd9789"
-  integrity sha1-L2GZ97Qh7YT5Ku8zGHLZxz/9l4k=
-
-createjs-npm@^0.2.0:
-  version "0.2.0"
-  resolved "http://npm.fxwork.kugou.net:80/createjs-npm/-/createjs-npm-0.2.0.tgz#982b3068974b22f569beb567441eb7bbb6559113"
-  integrity sha1-mCswaJdLIvVpvrVnRB63u7ZVkRM=
-
 cross-spawn@7.0.3, cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
   version "7.0.3"
   resolved "http://npm.fxwork.kugou.net:80/cross-spawn/-/cross-spawn-7.0.3.tgz#f73a85b9d5d41d045551c177e2882d4ac85728a6"
@@ -5062,6 +5052,11 @@ fast-levenshtein@^2.0.6, fast-levenshtein@~2.0.6:
   version "2.0.6"
   resolved "http://npm.fxwork.kugou.net:80/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
+
+fastclick@^1.0.6:
+  version "1.0.6"
+  resolved "http://npm.fxwork.kugou.net:80/fastclick/-/fastclick-1.0.6.tgz#161625b27b1a5806405936bda9a2c1926d06be6a"
+  integrity sha1-FhYlsnsaWAZAWTa9qaLBkm0Gvmo=
 
 fastq@^1.6.0:
   version "1.11.0"
