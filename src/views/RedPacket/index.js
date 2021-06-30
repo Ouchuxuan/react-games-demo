@@ -1,10 +1,10 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react'
-import './index.scss'
-import pkg1 from '../../assets/1.png'
-import pkg2 from '../../assets/2.png'
-import pkg3 from '../../assets/3.png'
-import pkg4 from '../../assets/4.png'
-import pkg5 from '../../assets/5.png'
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import './index.72.scss';
+import pkg1 from '../../img/1.png';
+import pkg2 from '../../img/2.png';
+import pkg3 from '../../img/3.png';
+import pkg4 from '../../img/4.png';
+import pkg5 from '../../img/5.png';
 
 const pkgWidth = 64;
 const pkgHeight = 64;
@@ -39,24 +39,23 @@ const imgSourceList = [{
   y: 0,
   speed: 0.15,
   id: 4
-}]
+}];
 
 
-const getImage = (imageSource) => {
+const getImage = imageSource => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = imageSource;
     img.onload = () => {
-      resolve(img)
-    }
-    img.onerror = (event) => {
-      reject(event)
-    }
-  })
-}
+      resolve(img);
+    };
+    img.onerror = event => {
+      reject(event);
+    };
+  });
+};
 
-
-export default function RedPacket(props) {
+export default function RankInfo() {
   // 注：如果要向requestAnimateFrame插入新的canvas绘制，可能要用taskList来存储绘制方法
   const container = useRef(null);
   const canvas = useRef(null);
@@ -65,37 +64,43 @@ export default function RedPacket(props) {
   // 挂载pkgList
   const pkgList = useRef(null);
   // 挂在canvasConext
-  const ctx = useRef(null)
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 })
+  const ctx = useRef(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
+  useEffect(() => {
+    const { width, height } = container.current.getBoundingClientRect();
+    ctx.current = canvas.current.getContext('2d');
+    setCanvasSize({ width, height });
+  }, []);
   // 清除&暂停动画
   const clearAnimate = () => {
     if (timeId.current) {
-      window.cancelAnimationFrame(timeId.current)
+      window.cancelAnimationFrame(timeId.current);
     }
-  }
+  };
 
   const drawText = (canvasContext, text, x, y) => {
-    canvasContext.font = "46px Georgia";
+    canvasContext.font = '46px Georgia';
     canvasContext.fillText(text, x, y);
-  }
+  };
 
   const hitTest = (mouseX, mouseY, callBack = () => { }) => {
-
     for (let i = 0; i < pkgList.current.length; i++) {
       // X 轴命中
-      const hitX = ((mouseX - pkgList.current[i].x) <= pkgWidth) && ((mouseX - pkgList.current[i].x) > 0);
+      const hitX = ((mouseX - pkgList.current[i].x) <= pkgWidth)
+        && ((mouseX - pkgList.current[i].x) > 0);
       // Y 轴命中
-      const hitY = ((mouseY - pkgList.current[i].y) <= pkgHeight) && ((mouseY - pkgList.current[i].y) > 0);
+      const hitY = ((mouseY - pkgList.current[i].y) <= pkgHeight)
+        && ((mouseY - pkgList.current[i].y) > 0);
       if (hitX && hitY) {
         callBack(pkgList.current[i]);
         break;
       }
     }
-  }
+  };
 
   // 绘图任务队列
-  const taskList = useRef(null)
+  const taskList = useRef(null);
   // 移动红包
   const movePkg = useCallback(() => {
     // 步进
@@ -104,75 +109,78 @@ export default function RedPacket(props) {
       // 计算当前的y轴位置
       let y = 0;
       if (item.y <= canvasSize.height) {
-        y = item.y + step * item.speed
+        y = item.y + step * item.speed;
       }
       return {
         ...item,
         y,
-      }
-    })
+      };
+    });
     pkgList.current.forEach((item, index) => {
-      ctx.current.drawImage(item.img, item.x, item.y)
-    })
+      ctx.current.drawImage(item.img, item.x, item.y);
+    });
   }, [canvasSize]);
 
   // 点击效果
   const testTask = useCallback(() => {
     drawText(ctx.current, '这是个激励语', canvasSize.width / 2 - 50, canvasSize.height / 2);
-  }, [canvasSize])
+  }, [canvasSize]);
 
-  taskList.current = [movePkg]
+  taskList.current = [movePkg];
 
   // 绘图方法
-  const drawing = useCallback((canvasContext) => {
+  const drawing = canvasContext => {
     canvasContext.clearRect(0, 0, canvasSize.width, canvasSize.height);
     taskList.current.forEach(task => {
       task();
-    })
-    clearAnimate()
-    timeId.current = window.requestAnimationFrame(() => { drawing(canvasContext) })
-  }, [canvasSize])
+    });
+    clearAnimate();
+    timeId.current = window.requestAnimationFrame(() => { drawing(canvasContext); });
+  };
 
 
-  useEffect(() => {
-    const { width, height } = container.current.getBoundingClientRect();
-    ctx.current = canvas.current.getContext('2d');
-    setCanvasSize({ width, height })
-  }, [])
-
-  useEffect(() => {
+  const initAnimate = () => {
     Promise.all(imgSourceList.map(item => {
-      return getImage(item.img).catch(error => console.error(error))
+      return getImage(item.img).catch(error => console.error(error));
     })).then(res => {
       pkgList.current = res.map((item, index) => {
         return {
           ...imgSourceList[index],
           img: item,
-        }
-      })
+        };
+      });
       pkgList.current.forEach(item => {
-        ctx.current.drawImage(item.img, item.x, item.y)
-      })
-      clearAnimate()
+        ctx.current.drawImage(item.img, item.x, item.y);
+      });
+      clearAnimate();
       // 进入绘制循环
-      timeId.current = window.requestAnimationFrame(() => { drawing(ctx.current) })
-    })
+      timeId.current = window.requestAnimationFrame(() => { drawing(ctx.current); });
+    });
+  };
+
+  useEffect(() => {
+    initAnimate();
     // 清除副作用
     return () => {
-      clearAnimate()
-    }
-  }, [canvasSize, drawing])
+      clearAnimate();
+    };
+  });
 
-  const handleClick = (event) => {
+  const handleClick = event => {
     const { nativeEvent: { offsetX, offsetY } } = event;
-    hitTest(offsetX, offsetY, (pkgItem) => {
-      taskList.current.push(testTask)
+    hitTest(offsetX, offsetY, pkgItem => {
+      taskList.current.push(testTask);
     });
-  }
-
+  };
   return (
-    <div className='container' ref={container}>
-      <canvas width={canvasSize.width} height={canvasSize.height} ref={canvas} onClick={handleClick}></canvas>
+    <div className="red-packets-rain-container" ref={container}>
+      <canvas
+        width={canvasSize.width}
+        height={canvasSize.height}
+        ref={canvas}
+        onClick={handleClick}
+      />
     </div>
-  )
+  );
 }
+

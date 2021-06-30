@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
+import React, { useRef, useEffect, useState, useCallback } from 'react'
 import './index.scss'
 import pkg1 from '../../assets/1.png'
 import pkg2 from '../../assets/2.png'
@@ -57,8 +57,6 @@ const getImage = (imageSource) => {
 
 
 export default function RedPacket(props) {
-  // 绘图任务队列
-  const taskList = []
   // 注：如果要向requestAnimateFrame插入新的canvas绘制，可能要用taskList来存储绘制方法
   const container = useRef(null);
   const canvas = useRef(null);
@@ -68,8 +66,7 @@ export default function RedPacket(props) {
   const pkgList = useRef(null);
   // 挂在canvasConext
   const ctx = useRef(null)
-  const [canvasWidth, setCanvasWidth] = useState(0)
-  const [canvasHeight, setCanvasHeight] = useState(0)
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 })
 
   // 清除&暂停动画
   const clearAnimate = () => {
@@ -84,6 +81,7 @@ export default function RedPacket(props) {
   }
 
   const hitTest = (mouseX, mouseY, callBack = () => { }) => {
+
     for (let i = 0; i < pkgList.current.length; i++) {
       // X 轴命中
       const hitX = ((mouseX - pkgList.current[i].x) <= pkgWidth) && ((mouseX - pkgList.current[i].x) > 0);
@@ -94,16 +92,18 @@ export default function RedPacket(props) {
         break;
       }
     }
-
   }
 
+  // 绘图任务队列
+  const taskList = useRef(null)
+  // 移动红包
   const movePkg = useCallback(() => {
     // 步进
     const step = 4;
     pkgList.current = pkgList.current.map(item => {
       // 计算当前的y轴位置
       let y = 0;
-      if (item.y <= canvasHeight) {
+      if (item.y <= canvasSize.height) {
         y = item.y + step * item.speed
       }
       return {
@@ -111,35 +111,36 @@ export default function RedPacket(props) {
         y,
       }
     })
-    pkgList.current.forEach(item => {
+    pkgList.current.forEach((item, index) => {
       ctx.current.drawImage(item.img, item.x, item.y)
     })
-  }, [canvasHeight]);
+  }, [canvasSize]);
 
+  // 点击效果
   const testTask = useCallback(() => {
-    drawText(ctx.current, '牛逼', canvasWidth / 2 - 50, canvasHeight / 2);
-  }, [canvasWidth, canvasHeight])
+    drawText(ctx.current, '这是个激励语', canvasSize.width / 2 - 50, canvasSize.height / 2);
+  }, [canvasSize])
 
+  taskList.current = [movePkg]
 
-  taskList.push(movePkg)
-
+  // 绘图方法
   const drawing = useCallback((canvasContext) => {
-    canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
-    taskList.forEach(task => {
+    canvasContext.clearRect(0, 0, canvasSize.width, canvasSize.height);
+    taskList.current.forEach(task => {
       task();
     })
     clearAnimate()
     timeId.current = window.requestAnimationFrame(() => { drawing(canvasContext) })
-  }, [canvasWidth, canvasHeight, taskList])
+  }, [canvasSize])
 
 
   useEffect(() => {
     const { width, height } = container.current.getBoundingClientRect();
     ctx.current = canvas.current.getContext('2d');
-    setCanvasWidth(width);
-    setCanvasHeight(height);
+    setCanvasSize({ width, height })
+  }, [])
 
-
+  useEffect(() => {
     Promise.all(imgSourceList.map(item => {
       return getImage(item.img).catch(error => console.error(error))
     })).then(res => {
@@ -160,22 +161,18 @@ export default function RedPacket(props) {
     return () => {
       clearAnimate()
     }
-  }, [canvasWidth, canvasHeight, drawing])
+  }, [canvasSize, drawing])
 
-
-  // ?
-  const handleClick = useCallback(
-    (event) => {
-      const { nativeEvent: { offsetX, offsetY } } = event;
-      hitTest(offsetX, offsetY, (pkgItem) => {
-        taskList.push(testTask)
-      });
-    }, [taskList, testTask])
-
+  const handleClick = (event) => {
+    const { nativeEvent: { offsetX, offsetY } } = event;
+    hitTest(offsetX, offsetY, (pkgItem) => {
+      taskList.current.push(testTask)
+    });
+  }
 
   return (
     <div className='container' ref={container}>
-      <canvas width={canvasWidth} height={canvasHeight} ref={canvas} onClick={handleClick}></canvas>
+      <canvas width={canvasSize.width} height={canvasSize.height} ref={canvas} onClick={handleClick}></canvas>
     </div>
   )
 }
