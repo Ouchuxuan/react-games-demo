@@ -1,37 +1,39 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import './index.72.scss';
-import pkg1 from '../../img/1.png';
-import pkg2 from '../../img/2.png';
-import pkg3 from '../../img/3.png';
-import pkg4 from '../../img/4.png';
-import pkg5 from '../../img/5.png';
+import pkg1 from '../../common/rain/img/1.png';
+import pkg2 from '../../common/rain/img/2.png';
+import pkg3 from '../../common/rain/img/3.png';
+import pkg4 from '../../common/rain/img/4.png';
+import pkg5 from '../../common/rain/img/5.png';
 
 const pkgWidth = 64;
 const pkgHeight = 64;
+
+// 快速版
 
 const imgSourceList = [{
   img: pkg1,
   x: 0,
   y: 0,
-  speed: 1,
+  speed: 0.04,
   id: 0
 }, {
   img: pkg2,
   x: 60,
   y: 0,
-  speed: 1.8,
+  speed: 0.4,
   id: 1
 }, {
   img: pkg3,
   x: 120,
   y: 0,
-  speed: 0.8,
+  speed: 0.2,
   id: 2
 }, {
   img: pkg4,
   x: 180,
   y: 0,
-  speed: 2.4,
+  speed: 0.3,
   id: 3
 }, {
   img: pkg5,
@@ -40,7 +42,6 @@ const imgSourceList = [{
   speed: 0.15,
   id: 4
 }];
-
 
 const getImage = imageSource => {
   return new Promise((resolve, reject) => {
@@ -55,34 +56,36 @@ const getImage = imageSource => {
   });
 };
 
-export default function RankInfo() {
+
+export default function RedPacketRain(props) {
   // 注：如果要向requestAnimateFrame插入新的canvas绘制，可能要用taskList来存储绘制方法
   const container = useRef(null);
   const canvas = useRef(null);
   // 挂载requestAnimateFrameID
+  const animateTimeId = useRef(null);
   const timeId = useRef(null);
   // 挂载pkgList
   const pkgList = useRef(null);
-  // 挂在canvasConext
+  // 挂载绘图任务
+  const taskList = useRef([]);
+  // 挂载canvasConext
   const ctx = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-
-  useEffect(() => {
-    const { width, height } = container.current.getBoundingClientRect();
-    ctx.current = canvas.current.getContext('2d');
-    setCanvasSize({ width, height });
-  }, []);
+  // 倒计时
+  const [isCountDowning, setIsCountDowning] = useState(true);
+  const [countDownTime, setCountDownTime] = useState(3);
   // 清除&暂停动画
   const clearAnimate = () => {
-    if (timeId.current) {
-      window.cancelAnimationFrame(timeId.current);
+    if (animateTimeId.current) {
+      window.cancelAnimationFrame(animateTimeId.current);
     }
   };
 
-  const drawText = (canvasContext, text, x, y) => {
-    canvasContext.font = '46px Georgia';
-    canvasContext.fillText(text, x, y);
+  const drawText = (text, x, y) => {
+    ctx.current.font = '20px Georgia';
+    ctx.current.fillText(text, x, y);
   };
+
 
   const hitTest = (mouseX, mouseY, callBack = () => { }) => {
     for (let i = 0; i < pkgList.current.length; i++) {
@@ -99,12 +102,9 @@ export default function RankInfo() {
     }
   };
 
-  // 绘图任务队列
-  const taskList = useRef(null);
-  // 移动红包
-  const movePkg = useCallback(() => {
+  const move = useCallback(() => {
     // 步进
-    const step = 4;
+    const step = 10;
     pkgList.current = pkgList.current.map(item => {
       // 计算当前的y轴位置
       let y = 0;
@@ -116,30 +116,23 @@ export default function RankInfo() {
         y,
       };
     });
-    pkgList.current.forEach((item, index) => {
+    pkgList.current.forEach(item => {
       ctx.current.drawImage(item.img, item.x, item.y);
     });
   }, [canvasSize]);
 
-  // 点击效果
-  const testTask = useCallback(() => {
-    drawText(ctx.current, '这是个激励语', canvasSize.width / 2 - 50, canvasSize.height / 2);
-  }, [canvasSize]);
+  taskList.current = [move];
 
-  taskList.current = [movePkg];
-
-  // 绘图方法
-  const drawing = canvasContext => {
+  const draw = useCallback(canvasContext => {
     canvasContext.clearRect(0, 0, canvasSize.width, canvasSize.height);
     taskList.current.forEach(task => {
       task();
     });
     clearAnimate();
-    timeId.current = window.requestAnimationFrame(() => { drawing(canvasContext); });
-  };
+    animateTimeId.current = window.requestAnimationFrame(() => { draw(canvasContext); });
+  }, [canvasSize]);
 
-
-  const initAnimate = () => {
+  const initAnimate = useCallback(() => {
     Promise.all(imgSourceList.map(item => {
       return getImage(item.img).catch(error => console.error(error));
     })).then(res => {
@@ -149,38 +142,71 @@ export default function RankInfo() {
           img: item,
         };
       });
-      pkgList.current.forEach(item => {
-        ctx.current.drawImage(item.img, item.x, item.y);
-      });
       clearAnimate();
-      // 进入绘制循环
-      timeId.current = window.requestAnimationFrame(() => { drawing(ctx.current); });
+      animateTimeId.current = window.requestAnimationFrame(() => { draw(ctx.current); });
     });
-  };
-
-  useEffect(() => {
-    initAnimate();
-    // 清除副作用
-    return () => {
-      clearAnimate();
-    };
-  });
+  }, [draw]);
 
   const handleClick = event => {
     const { nativeEvent: { offsetX, offsetY } } = event;
     hitTest(offsetX, offsetY, pkgItem => {
-      taskList.current.push(testTask);
+      console.log('击中', pkgItem, canvasSize);
+      taskList.current.push(() => drawText('hahah', 150, 150));
     });
   };
+
+
+
+  useEffect(() => {
+    if (isCountDowning) {
+      if (timeId.current) clearInterval(timeId.current);
+      timeId.current = setInterval(() => {
+        if (countDownTime === 0) {
+          clearInterval(timeId.current);
+          setIsCountDowning(false);
+          return;
+        }
+        setCountDownTime(countDownTime - 1);
+      }, 1000);
+    }
+    return () => {
+      clearAnimate();
+    };
+  }, [isCountDowning, countDownTime]);
+
+
+  useEffect(() => {
+    if (!isCountDowning) {
+      const { width, height } = container.current.getBoundingClientRect();
+      ctx.current = canvas.current.getContext('2d');
+      setCanvasSize({ width, height });
+    }
+  }, [isCountDowning]);
+
+  useEffect(() => {
+    if (canvasSize.width !== 0) {
+      initAnimate();
+    }
+  }, [canvasSize, initAnimate]);
+
+
   return (
     <div className="red-packets-rain-container" ref={container}>
-      <canvas
-        width={canvasSize.width}
-        height={canvasSize.height}
-        ref={canvas}
-        onClick={handleClick}
-      />
+      {isCountDowning && (
+        <div className="count-down-time">
+          {countDownTime} S 后红包雨开抢
+        </div>
+      )}
+      {
+        !isCountDowning && (
+          <canvas
+            width={canvasSize.width}
+            height={canvasSize.height}
+            ref={canvas}
+            onClick={handleClick}
+          />
+        )
+      }
     </div>
   );
 }
-
