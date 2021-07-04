@@ -8,10 +8,15 @@ import pkg2 from '../../assets/2.png';
 import pkg3 from '../../assets/3.png';
 import pkg4 from '../../assets/4.png';
 import pkg5 from '../../assets/5.png';
+const Stats = require('stats-js');
 
 const pkgWidth = 64;
 const pkgHeight = 64;
 
+console.log(Stats);
+var stats = new Stats();
+stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom );
 
 const imgSourceList = [{
   img: pkg1,
@@ -144,10 +149,12 @@ export default function RedPacketRain(props) {
 
   const draw = useCallback(canvasContext => {
     canvasContext.clearRect(0, 0, canvasSize.width, canvasSize.height);
+    stats.begin()
     taskList.current.forEach(task => {
       task();
     });
     clearAnimate();
+    stats.end();
     animateTimeId.current = window.requestAnimationFrame(() => { draw(canvasContext); });
   }, [canvasSize]);
 
