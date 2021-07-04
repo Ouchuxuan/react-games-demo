@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback,useMemo } from 'react';
 import './index.scss';
 import RainLoading from '../../components/RainLoading';
 import CountDownLoading from '../../components/CountDownLoading'
@@ -16,33 +16,43 @@ const pkgHeight = 64;
 const imgSourceList = [{
   img: pkg1,
   x: 0,
-  y: 0,
-  speed: 0.04,
-  id: 0
+  y: -pkgHeight,
+  speed: 0.9,
+  id: 0,
+  beTouch:true,
+  opacity:1
 }, {
   img: pkg2,
   x: 60,
-  y: 0,
-  speed: 0.4,
-  id: 1
+  y: -pkgHeight,
+  speed: 0.6,
+  id: 1,
+  beTouch:true,
+  opacity:1
 }, {
   img: pkg3,
   x: 120,
-  y: 0,
-  speed: 0.2,
-  id: 2
+  y: -pkgHeight,
+  speed: 0.4,
+  id: 2,
+  beTouch:true,
+  opacity:1
 }, {
   img: pkg4,
   x: 180,
-  y: 0,
-  speed: 0.3,
-  id: 3
+  y: -pkgHeight,
+  speed: 0.6,
+  id: 3,
+  beTouch:true,
+  opacity:1
 }, {
   img: pkg5,
   x: 240,
-  y: 0,
-  speed: 0.15,
-  id: 4
+  y: -pkgHeight,
+  speed: 0.8,
+  id: 4,
+  beTouch:true,
+  opacity:1
 }];
 
 const getImage = imageSource => {
@@ -73,7 +83,7 @@ export default function RedPacketRain(props) {
   const ctx = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   // 红包雨倒计时
-  const [countDownTime, setCountDownTime] = useState(10)
+  const [countDownTime, setCountDownTime] = useState(20)
   const countDownTimeRef = useRef();
   countDownTimeRef.current = countDownTime;
 
@@ -112,8 +122,9 @@ export default function RedPacketRain(props) {
     const step = 10;
     pkgList.current = pkgList.current.map(item => {
       // 计算当前的y轴位置
-      let y = 0;
+      let y =   -pkgHeight;
       if (item.y <= canvasSize.height) {
+        // 注意canvas不要以浮点数定位，chrome会对浮点数进行四舍五入，所以可能会出现掉帧问题
         y = item.y + step * item.speed;
       }
       return {
@@ -126,7 +137,10 @@ export default function RedPacketRain(props) {
     });
   }, [canvasSize]);
 
-  taskList.current = [move];
+  // 这里会重新被覆盖
+  taskList.current = useMemo(() => {
+    return taskList.current = [move]
+  }, [move])
 
   const draw = useCallback(canvasContext => {
     canvasContext.clearRect(0, 0, canvasSize.width, canvasSize.height);
@@ -155,7 +169,15 @@ export default function RedPacketRain(props) {
   const handleClick = event => {
     const { nativeEvent: { offsetX, offsetY } } = event;
     hitTest(offsetX, offsetY, pkgItem => {
+      // 击中后，需要添加任务，并且禁掉该红包的点击事件，隐藏该红包
       console.log('击中', pkgItem, canvasSize);
+      pkgList.current.forEach(item=>{
+        if(item.id === pkgItem.id) {
+          // 被点击中就滚回屏幕外初始点
+          item.y = - (pkgHeight*2);
+          return;
+        }
+      })
       taskList.current.push(() => drawText('hahah', 150, 150));
     });
   };
@@ -180,7 +202,7 @@ export default function RedPacketRain(props) {
     // 开启动画的时候同时开启倒计时
     if (rainCountDownTime < 0) {
       timeId = setInterval(() => {
-        console.log(countDownTimeRef.current)
+        console.log('--',countDownTimeRef.current)
         setCountDownTime(time => time - 1);
         if (countDownTimeRef.current === 0) {
           clearInterval(timeId);
