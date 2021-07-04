@@ -1,8 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import './index.scss';
 import RainLoading from '../../components/RainLoading';
-import CountDownLoading from '../../components/CountDownLoading'
-import { useRainCountDown } from '../../hooks'
 import pkg1 from '../../assets/1.png';
 import pkg2 from '../../assets/2.png';
 import pkg3 from '../../assets/3.png';
@@ -64,7 +62,8 @@ export default function RedPacketRain(props) {
   const container = useRef(null);
   const canvas = useRef(null);
   // 挂载requestAnimateFrameID
-  const animateTimeId = useRef();
+  const animateTimeId = useRef(null);
+  const timeId = useRef(null);
   // 挂载pkgList
   const pkgList = useRef(null);
   // 挂载绘图任务
@@ -72,13 +71,9 @@ export default function RedPacketRain(props) {
   // 挂载canvasConext
   const ctx = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  // 红包雨倒计时
-  const [countDownTime, setCountDownTime] = useState(10)
-  const countDownTimeRef = useRef();
-  countDownTimeRef.current = countDownTime;
-
-
-
+  // 倒计时
+  const [isCountDowning, setIsCountDowning] = useState(true);
+  const [countDownTime, setCountDownTime] = useState(3);
   // 清除&暂停动画
   const clearAnimate = () => {
     if (animateTimeId.current) {
@@ -160,14 +155,30 @@ export default function RedPacketRain(props) {
     });
   };
 
-  const rainCountDownTime = useRainCountDown()
+
+
   useEffect(() => {
-    if (rainCountDownTime < 0) {
+    if (isCountDowning) {
+      if (timeId.current) clearInterval(timeId.current);
+      timeId.current = setInterval(() => {
+        if (countDownTime === 0) {
+          clearInterval(timeId.current);
+          setIsCountDowning(false);
+          return;
+        }
+        setCountDownTime(countDownTime=>countDownTime-1);
+      }, 1000);
+    }
+  }, [isCountDowning, countDownTime]);
+
+
+  useEffect(() => {
+    if (!isCountDowning) {
       const { width, height } = container.current.getBoundingClientRect();
       ctx.current = canvas.current.getContext('2d');
       setCanvasSize({ width, height });
     }
-  }, [rainCountDownTime]);
+  }, [isCountDowning]);
 
   useEffect(() => {
     if (canvasSize.width !== 0) {
@@ -175,42 +186,22 @@ export default function RedPacketRain(props) {
     }
   }, [canvasSize, initAnimate]);
 
-  useEffect(() => {
-    let timeId = 0;
-    // 开启动画的时候同时开启倒计时
-    if (rainCountDownTime < 0) {
-      timeId = setInterval(() => {
-        console.log(countDownTimeRef.current)
-        setCountDownTime(time => time - 1);
-        if (countDownTimeRef.current === 0) {
-          clearInterval(timeId);
-          clearAnimate();
-        }
-      }, 1000)
-    }
-    return () => {
-      clearInterval(timeId)
-    }
-
-  }, [rainCountDownTime])
-
 
   return (
     <div className="red-packets-rain-container" ref={container}>
-      {(rainCountDownTime >= 0) && (
-        <RainLoading countDownTime={rainCountDownTime} />
+      {isCountDowning && (
+        <div className="count-down-time">
+          {countDownTime} S 后红包雨开抢
+        </div>
       )}
       {
-        (rainCountDownTime < 0) && (
-          <>
-            <CountDownLoading countDownTime={countDownTime}/>
-            <canvas
-              width={canvasSize.width}
-              height={canvasSize.height}
-              ref={canvas}
-              onClick={handleClick}
-            />
-          </>
+        !isCountDowning && (
+          <canvas
+            width={canvasSize.width}
+            height={canvasSize.height}
+            ref={canvas}
+            onClick={handleClick}
+          />
         )
       }
     </div>

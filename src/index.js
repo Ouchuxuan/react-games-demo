@@ -1,10 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import FastClick from 'fastclick';
 import './style/reset.scss';
 import './style/common.scss';
 import './style/main.scss';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+
+FastClick.attach(document.body);
 
 ReactDOM.render(
   <React.StrictMode>
