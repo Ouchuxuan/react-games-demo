@@ -190,7 +190,7 @@ export default function RedPacketRain(props) {
     pkgList.current.forEach(item => {
       ctx.current.drawImage(item.img, item.x, item.y);
     });
-  }, [canvasSize]);
+  }, [canvasSize.height]);
 
   // 这里会重新被覆盖
   taskList.current = useMemo(() => {
@@ -208,7 +208,7 @@ export default function RedPacketRain(props) {
     clearAnimate();
     stats.end();
     animateTimeId.current = window.requestAnimationFrame(() => { draw(canvasContext); });
-  }, [canvasSize]);
+  }, [canvasSize.height, canvasSize.width]);
 
   const initAnimate = useCallback(() => {
     Promise.all(imgSourceList.map(item => {
