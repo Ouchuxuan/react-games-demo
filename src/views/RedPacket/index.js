@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback,useMemo } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import './index.scss';
 import RainLoading from '../../components/RainLoading';
 import CountDownLoading from '../../components/CountDownLoading'
@@ -8,15 +8,17 @@ import pkg2 from '../../assets/2.png';
 import pkg3 from '../../assets/3.png';
 import pkg4 from '../../assets/4.png';
 import pkg5 from '../../assets/5.png';
+import money from '../../assets/money.png';
 const Stats = require('stats-js');
 
 const pkgWidth = 64;
 const pkgHeight = 64;
+const moneyWidth = 48;
+const moneyHeight = 48;
 
-console.log(Stats);
-var stats = new Stats();
-stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-document.body.appendChild( stats.dom );
+const stats = new Stats();
+stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild(stats.dom);
 
 const imgSourceList = [{
   img: pkg1,
@@ -24,40 +26,63 @@ const imgSourceList = [{
   y: -pkgHeight,
   speed: 0.9,
   id: 0,
-  beTouch:true,
-  opacity:1
+  beTouch: true,
+  opacity: 1,
+  type: 0
 }, {
   img: pkg2,
   x: 60,
   y: -pkgHeight,
   speed: 0.6,
   id: 1,
-  beTouch:true,
-  opacity:1
+  beTouch: true,
+  opacity: 1,
+  type: 0
+}, {
+  img: money,
+  x: 120,
+  y: -2 * moneyHeight,
+  speed: 0.5,
+  id: 2,
+  beTouch: true,
+  opacity: 1,
+  type: 1
 }, {
   img: pkg3,
   x: 120,
   y: -pkgHeight,
   speed: 0.4,
-  id: 2,
-  beTouch:true,
-  opacity:1
+  id: 3,
+  beTouch: true,
+  opacity: 1,
+  type: 0
+}, {
+  img: money,
+  x: 190,
+  y: -moneyHeight,
+  speed: 0.32,
+  id: 4,
+  beTouch: true,
+  opacity: 1,
+  type: 1
 }, {
   img: pkg4,
   x: 180,
   y: -pkgHeight,
   speed: 0.6,
-  id: 3,
-  beTouch:true,
-  opacity:1
+  id: 5,
+  beTouch: true,
+  opacity: 1,
+  type: 0
 }, {
   img: pkg5,
   x: 240,
   y: -pkgHeight,
   speed: 0.8,
-  id: 4,
-  beTouch:true,
-  opacity:1
+  id: 6,
+  beTouch: true,
+  opacity: 1,
+  type: 0
 }];
 
 const getImage = imageSource => {
@@ -107,14 +132,39 @@ export default function RedPacketRain(props) {
   };
 
 
+  // 这里需要修改一下
   const hitTest = (mouseX, mouseY, callBack = () => { }) => {
     for (let i = 0; i < pkgList.current.length; i++) {
-      // X 轴命中
-      const hitX = ((mouseX - pkgList.current[i].x) <= pkgWidth)
-        && ((mouseX - pkgList.current[i].x) > 0);
-      // Y 轴命中
-      const hitY = ((mouseY - pkgList.current[i].y) <= pkgHeight)
-        && ((mouseY - pkgList.current[i].y) > 0);
+      let hitX, hitY;
+      const clickOffset = pkgList.current[i].speed * 100;
+      switch (pkgList.current[i].type) {
+        case 0:
+          // 红包
+          // X 轴命中
+          hitX = ((mouseX - pkgList.current[i].x) <= pkgWidth)
+            && ((mouseX - pkgList.current[i].x) > 0);
+          // Y 轴命中
+          hitY = ((mouseY - pkgList.current[i].y) <= (pkgHeight+clickOffset))
+            && ((mouseY - pkgList.current[i].y) > -clickOffset);
+          break;
+        case 1:
+          // money
+          // X 轴命中
+          hitX = ((mouseX - pkgList.current[i].x) <= pkgWidth)
+            && ((mouseX - pkgList.current[i].x) > 0);
+          // Y 轴命中
+          hitY = ((mouseY - pkgList.current[i].y) <= pkgHeight)
+            && ((mouseY - pkgList.current[i].y) > 0);
+          break;
+        default:
+          // X 轴命中
+          hitX = ((mouseX - pkgList.current[i].x) <= pkgWidth)
+            && ((mouseX - pkgList.current[i].x) > 0);
+          // Y 轴命中
+          hitY = ((mouseY - pkgList.current[i].y) <= pkgHeight)
+            && ((mouseY - pkgList.current[i].y) > 0);
+          break;
+      }
       if (hitX && hitY) {
         callBack(pkgList.current[i]);
         break;
@@ -127,7 +177,7 @@ export default function RedPacketRain(props) {
     const step = 10;
     pkgList.current = pkgList.current.map(item => {
       // 计算当前的y轴位置
-      let y =   -pkgHeight;
+      let y = -pkgHeight;
       if (item.y <= canvasSize.height) {
         // 注意canvas不要以浮点数定位，chrome会对浮点数进行四舍五入，所以可能会出现掉帧问题
         y = item.y + step * item.speed;
@@ -145,7 +195,9 @@ export default function RedPacketRain(props) {
   // 这里会重新被覆盖
   taskList.current = useMemo(() => {
     return taskList.current = [move]
-  }, [move])
+  }, [move]);
+
+
 
   const draw = useCallback(canvasContext => {
     canvasContext.clearRect(0, 0, canvasSize.width, canvasSize.height);
@@ -173,19 +225,34 @@ export default function RedPacketRain(props) {
     });
   }, [draw]);
 
+  const hitTimer = useRef();
+  // 删除第二个任务
+  const removeSecondTask = () => {
+    if (taskList.current.length > 1) {
+      taskList.current.splice(1, 1);
+    }
+
+  }
+
   const handleClick = event => {
     const { nativeEvent: { offsetX, offsetY } } = event;
     hitTest(offsetX, offsetY, pkgItem => {
       // 击中后，需要添加任务，并且禁掉该红包的点击事件，隐藏该红包
       console.log('击中', pkgItem, canvasSize);
-      pkgList.current.forEach(item=>{
-        if(item.id === pkgItem.id) {
+      pkgList.current.forEach(item => {
+        if (item.id === pkgItem.id) {
           // 被点击中就滚回屏幕外初始点
-          item.y = - (pkgHeight*2);
+          item.y = - (pkgHeight * 2);
           return;
         }
       })
-      taskList.current.push(() => drawText('hahah', 150, 150));
+      if(taskList.current.length===1) {
+        taskList.current.push(() => drawText('hahah', 150, 150));
+      }
+      if (hitTimer.current) clearTimeout(hitTimer.current);
+      hitTimer.current = setTimeout(() => {
+        removeSecondTask();
+      }, 2000)
     });
   };
 
@@ -209,7 +276,6 @@ export default function RedPacketRain(props) {
     // 开启动画的时候同时开启倒计时
     if (rainCountDownTime < 0) {
       timeId = setInterval(() => {
-        console.log('--',countDownTimeRef.current)
         setCountDownTime(time => time - 1);
         if (countDownTimeRef.current === 0) {
           clearInterval(timeId);
@@ -232,7 +298,7 @@ export default function RedPacketRain(props) {
       {
         (rainCountDownTime < 0) && (
           <>
-            <CountDownLoading countDownTime={countDownTime}/>
+            <CountDownLoading countDownTime={countDownTime} />
             <canvas
               width={canvasSize.width}
               height={canvasSize.height}
