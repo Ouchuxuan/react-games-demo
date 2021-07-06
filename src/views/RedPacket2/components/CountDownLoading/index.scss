@@ -1,0 +1,9 @@
+@import '../../../../style/func.scss';
+.countdown-loading-layout{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: skyblue;
+  height: p2r(204);
+}

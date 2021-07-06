@@ -1,5 +1,22 @@
-.red-packets-rain-container {
+@import '../../style/func.scss';
+.red-packets-layout{
   width: 100%;
   height: 100%;
-  position: relative;
+  flex-direction: column;
+  .fall-layout{
+    padding-top: p2r(204);
+    box-sizing: border-box;
+    height: 100%;
+    img{
+      position: relative;
+      &.red-packet{
+        width: p2r(120);
+        height: p2r(140);
+      }
+      &.gold{
+        width: p2r(121);
+        height: p2r(123);
+      }
+    }
+  }
 }
