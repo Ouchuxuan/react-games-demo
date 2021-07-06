@@ -1,0 +1,7 @@
+$uiWidth: 750 !default;
+
+@function p2r($px) {
+  @return $px  / ($uiWidth /37.5) * 1rem;
+}
+
+
