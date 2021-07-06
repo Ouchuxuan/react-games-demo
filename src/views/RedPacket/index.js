@@ -13,12 +13,14 @@ const Stats = require('stats-js');
 
 const pkgWidth = 64;
 const pkgHeight = 64;
-const moneyWidth = 48;
+// const moneyWidth = 48;
 const moneyHeight = 48;
 
 const stats = new Stats();
 stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
 document.body.appendChild(stats.dom);
+
+// 快速版
 
 const imgSourceList = [{
   img: pkg1,
@@ -269,7 +271,7 @@ export default function RedPacketRain(props) {
     if (canvasSize.width !== 0) {
       initAnimate();
     }
-  }, [canvasSize, initAnimate]);
+  }, [canvasSize.width, initAnimate]);
 
   useEffect(() => {
     let timeId = 0;
