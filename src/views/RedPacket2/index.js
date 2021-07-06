@@ -55,14 +55,17 @@ export default function RedPackets() {
     () => {
       const offsetStep = 1;
       // const rotateStep = 1;
-      for (let i = 0; i < fallItemList.length; i++) {
-        fallItemList[i] = {
-          ...fallItemList[i],
-          offsetY: fallItemList[i] + offsetStep
-        }
+      const stepMove = ()=>{
+        for (let i = 0; i < fallItemList.length; i++) {
+          fallItemList[i] = {
+            ...fallItemList[i],
+            offsetY: fallItemList[i].offsetY + offsetStep
+          }
+      }
+     
       }
     },
-    [fallItemList]
+    [fallItemList, containerSize.height]
   )
   useEffect(() => {
     const { width, height } = containerRef.current.getBoundingClientRect();
@@ -74,7 +77,7 @@ export default function RedPackets() {
     animateId.current = window.requestAnimationFrame(move);
   }, [])
 
-  
+
   return (<div className='red-packets-layout' ref={containerRef}>
     <CountDownLoading />
     <div className="fall-layout">
