@@ -30,7 +30,7 @@ const fallList = [
 ]
 
 export default function RedPackets() {
-  const [fallItemList] = useState(fallList);
+  const [fallItemList, setFallItemList] = useState(fallList);
   const animateId = useRef()
   const containerRef = useRef();
   const [containerSize, setContainerSize] = useState({ with: 0, height: 0 });

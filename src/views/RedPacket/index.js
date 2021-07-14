@@ -9,16 +9,16 @@ import pkg3 from '../../assets/3.png';
 import pkg4 from '../../assets/4.png';
 import pkg5 from '../../assets/5.png';
 import money from '../../assets/money.png';
-const Stats = require('stats-js');
+// const Stats = require('stats-js');
 
 const pkgWidth = 64;
 const pkgHeight = 64;
 // const moneyWidth = 48;
 const moneyHeight = 48;
 
-const stats = new Stats();
-stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-document.body.appendChild(stats.dom);
+// const stats = new Stats();
+// stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+// document.body.appendChild(stats.dom);
 
 // 快速版
 
@@ -203,12 +203,12 @@ export default function RedPacketRain(props) {
 
   const draw = useCallback(canvasContext => {
     canvasContext.clearRect(0, 0, canvasSize.width, canvasSize.height);
-    stats.begin()
+    // stats.begin()
     taskList.current.forEach(task => {
       task();
     });
     clearAnimate();
-    stats.end();
+    // stats.end();
     animateTimeId.current = window.requestAnimationFrame(() => { draw(canvasContext); });
   }, [canvasSize.height, canvasSize.width]);
 
