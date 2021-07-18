@@ -46,11 +46,11 @@ export default function Demo4() {
         checkedLen += 1;
         moneyCount += item.money * 100;
       }
-      if(item.disable) {
+      if (item.disable) {
         isDisable = true;
       }
     })
-    if(isDisable) {
+    if (isDisable) {
       return false;
     }
     moneyCount = moneyCount / 100;
@@ -95,10 +95,6 @@ export default function Demo4() {
     })
   }, [dispatchListState, listState.isSpecial])
 
-  const sumSelectInfo = useCallback(() => {
-
-  }, [])
-
   const onSelectAll = useCallback((event) => {
     const checked = event.target.checked;
     dispatchListState({ type: 'allPage', value: checked });
@@ -107,7 +103,7 @@ export default function Demo4() {
         return {
           ...item,
           checked: false,
-          disable:false,
+          disable: false,
         }
       })
       dispatchListState({ type: 'setList', value: result })
@@ -136,6 +132,50 @@ export default function Demo4() {
   useEffect(() => {
     currentListData.current = listState.listData
   }, [listState.listData, listState.selectCurrentPage])
+
+  // 普通发票和特殊发票切换
+  useEffect(() => {
+    // 首先看看是否达到限制状态
+    // 再看看是否全选
+    // 排除没有选择的情景
+    // const hasAnyChecked = currentListData.current.some(item=>{
+    //   return item.checked === true;
+    // })
+    // if(!hasAnyChecked) return;
+    // 计算切换订单类型后是否达到限制
+    let dataList = currentListData.current;
+    const isUnderLimitAfterSwitch = checkUnderLimit(dataList);
+    // 排除没有达到限制的情况
+    if (isUnderLimitAfterSwitch) return;
+    // 如果达到限制，从最小值开始删减订单，直到达到限制值
+    const getUnderLimitList = (dataList) => {
+      let reslutList = [];
+      const _getUnderLimitList = (dataList) => {
+        const isUnderLimit = checkUnderLimit(dataList);
+        console.log(isUnderLimit)
+        if (isUnderLimit === false) {
+          const minMoneyId = dataList.sort((a, b) => a.money - b.money)[0].id;
+          reslutList = dataList.map(item=>{
+            if(item.id === minMoneyId){
+              return {
+                ...item,
+                checked:false,
+                disable:true
+              }
+            } else{
+              return item
+            }
+          })
+          _getUnderLimitList(reslutList);
+        }
+      }
+      _getUnderLimitList(dataList)
+      return reslutList;
+    }
+
+    const result = getUnderLimitList(dataList);
+    dispatchListState({type:'setlist', value:result});
+  }, [checkUnderLimit, dispatchListState, listState.isSpecial])
 
   // 计算订单选择总数
   useEffect(() => {
