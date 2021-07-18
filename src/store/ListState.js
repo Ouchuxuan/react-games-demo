@@ -25,6 +25,16 @@ const reducer = (state, action) => {
         ...state,
         listData:[...state.listData, ...action.value]
       }
+    case 'setSpecial':
+      return {
+        ...state,
+        isSpecial:action.value
+      }
+    case 'beenGetAll':
+      return {
+        ...state,
+        beenGetAllData:action.value
+      }
     default:
       return state;
   }
@@ -32,7 +42,9 @@ const reducer = (state, action) => {
 const initState = {
   selectCurrentPage: false,
   selectAll: false,
-  listData: []
+  listData: [],
+  isSpecial:false,
+  beenGetAllData:false
 }
 
 /**

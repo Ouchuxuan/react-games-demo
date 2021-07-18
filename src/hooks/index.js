@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from 'react';
+import { useEffect, useReducer, useRef, useCallback, useContext } from 'react';
 export const useRainCountDown = () => {
   const [rainLoadingTime, dispatchTime] = useReducer((state, action) => {
     switch (action.type) {
@@ -20,7 +20,7 @@ export const useRainCountDown = () => {
           clearInterval(timeId);
           return;
         }
-        dispatchTime({type:'count'});
+        dispatchTime({ type: 'count' });
       }, 1000);
     }
     return () => {
@@ -29,5 +29,3 @@ export const useRainCountDown = () => {
   }, []);
   return rainLoadingTime;
 }
-
-// 维护taskList

@@ -1,0 +1,12 @@
+.loading{
+  position: absolute;
+  z-index: 100;
+  width: 256px;
+  height: 256px;
+  background: url('../../assets/loading.gif') center no-repeat;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+}

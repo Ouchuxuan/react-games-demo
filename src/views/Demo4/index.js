@@ -1,14 +1,18 @@
-import React, { useEffect, useState, useCallback, useContext, useRef} from 'react';
+import React, { useEffect, useState, useCallback, useContext, useRef } from 'react';
 import { Checkbox } from 'antd';
 import List from '../../components/List'
 import SwitchType from '../../components/SwitchType';
-import { getData } from '../../utils/data';
+import Loading from '../../components/Loading'
+import { getData, recrusiveGetData } from '../../utils/data';
+import { filterLimitList, initSelectList } from '../../utils'
 import { ListStateContext } from '../../store/ListState';
 import './index.scss';
 
 export default function Demo4() {
   const [toBottom, setToBottom] = useState(false);
   const currentListData = useRef([]);
+  const [loading, toggleLoading] = useState(false);
+  const [orderCount, setOrderCount] = useState(0);
   const { listState, dispatch: dispatchListState } = useContext(ListStateContext);
 
   const handleToBottom = useCallback((isToBottom) => {
@@ -18,32 +22,108 @@ export default function Demo4() {
   const loadMore = () => {
     getData(20).then(res => {
       if (res.length) {
-        dispatchListState({type:'addList', value:res})
+        const addList = res.map(item => {
+          return {
+            ...item,
+            disable: false,
+          }
+        })
+        let result = [...listState.listData, ...addList];
+        const isUnderLimit = checkUnderLimit(result);
+        console.log('isUnderLimit', isUnderLimit)
+        result = filterLimitList(result, isUnderLimit, { checked: false })
+        dispatchListState({ type: 'setList', value: result })
       }
     })
   }
 
-  const onSelectCurrentPage = useCallback((event) => {
-    const checked = event.target.checked;
-    const result = currentListData.current.map(item=>{
-      return {
-        ...item,
-        checked:checked,
+  const checkUnderLimit = useCallback((listData) => {
+    let checkedLen = 0;
+    let moneyCount = 0;
+    let isDisable = false
+    listData.forEach(item => {
+      if (item.checked) {
+        checkedLen += 1;
+        moneyCount += item.money * 100;
+      }
+      if(item.disable) {
+        isDisable = true;
       }
     })
-    dispatchListState({type:'setList',value:result});
+    if(isDisable) {
+      return false;
+    }
+    moneyCount = moneyCount / 100;
+    console.log('len:', checkedLen, 'moneyCOunt', moneyCount)
+    if (checkedLen > 500) return false;
+    const maxMoney = listState.isSpecial ? 1000000 : 100000;
+    if (moneyCount > maxMoney) return false;
+    return true;
+  }, [listState.isSpecial])
+
+  const onSelectCurrentPage = useCallback((event) => {
+    const checked = event.target.checked;
+    let result = currentListData.current.map(item => {
+      return {
+        ...item,
+        checked: checked,
+      }
+    })
+    console.log(checkUnderLimit(result));
+    result = initSelectList(result, { checked, isSpecial: listState.isSpecial });
+    dispatchListState({ type: 'setList', value: result });
     dispatchListState({ type: 'allCurrentPage', value: checked });
-   
-  }, [dispatchListState]);
+    if (listState.beenGetAllData) {
+      dispatchListState({ type: 'allPage', value: checked });
+    }
+  }, [checkUnderLimit, dispatchListState, listState.beenGetAllData, listState.isSpecial]);
+
+  const getAllData = useCallback(() => {
+    toggleLoading(true);
+    recrusiveGetData(600).then(res => {
+      dispatchListState({ type: 'beenGetAll', value: true })
+      const checkList = res.map(item => {
+        return {
+          ...item,
+          checked: true,
+          disable: false,
+        }
+      })
+      dispatchListState({ type: 'setList', value: checkList })
+    }).finally(() => {
+      toggleLoading(false);
+    })
+  }, [dispatchListState])
+
+  const sumSelectInfo = useCallback(() => {
+
+  }, [])
 
   const onSelectAll = useCallback((event) => {
     const checked = event.target.checked;
-    dispatchListState({ type: 'allPage', value: checked })
-  }, [dispatchListState]);
+    dispatchListState({ type: 'allPage', value: checked });
+    if (!checked) {
+      const result = currentListData.current.map(item => {
+        return {
+          ...item,
+          checked: false
+        }
+      })
+      dispatchListState({ type: 'setList', value: result })
+    } else {
+      getAllData();
+    }
+  }, [dispatchListState, getAllData]);
 
   useEffect(() => {
     getData(20).then(res => {
-      dispatchListState({type:'setList', value:res})
+      const result = res.map(item => {
+        return {
+          ...item,
+          disable: false,
+        }
+      })
+      dispatchListState({ type: 'setList', value: result })
     })
   }, [dispatchListState])
 
@@ -52,14 +132,15 @@ export default function Demo4() {
   }, [listState.listData])
 
   // 缓存全选状态切换时当前列表数据
-  useEffect(()=>{
+  useEffect(() => {
     currentListData.current = listState.listData
-  },[listState.listData, listState.selectCurrentPage])
+  }, [listState.listData, listState.selectCurrentPage])
 
-  // 当前页全选状态切换（这里有问题啦）
-  useEffect(()=>{
-   
-  },[dispatchListState, listState.selectCurrentPage])
+  // 计算订单选择总数
+  useEffect(() => {
+    const count = listState.listData.filter(item => item.checked).length;
+    setOrderCount(count)
+  }, [listState.listData])
 
   return (
     <div className="demo-layout">
@@ -75,7 +156,8 @@ export default function Demo4() {
       </div>
       <List onScroll={handleToBottom} />
       {toBottom && (<div className="load-more" onClick={loadMore}>加载更多</div>)}
-      <SwitchType></SwitchType>
+      <SwitchType orderCount={orderCount}></SwitchType>
+      {loading && <Loading></Loading>}
     </div>
   )
 }
