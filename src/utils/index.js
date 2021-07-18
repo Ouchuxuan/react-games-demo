@@ -5,7 +5,13 @@ export const initSelectList = (listData, selectOpt) => {
   let moneyCount = 0;
   const reslut = [];
   if (!selectOpt.checked) {
-    return listData;
+    return listData.map(item=>{
+      return {
+        ...item,
+        checked:false,
+        disable:false
+      }
+    })
   }
   listData.forEach((item, index) => {
     moneyCount += item.money * 100;
@@ -39,16 +45,6 @@ export const filterLimitList = (listData, isUnderLimit, filterOpt) => {
           disable: true,
         }
       } else {
-        // 这里有问题啊
-        // if (!item.checked) {
-        //   return {
-        //     ...item,
-        //     disable: true
-        //   }
-        // } else {
-        //   return item;
-        // }
-        console.log('22222')
         if (!item.checked) {
           return {
             ...item,

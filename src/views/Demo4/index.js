@@ -69,31 +69,31 @@ export default function Demo4() {
         checked: checked,
       }
     })
-    console.log(checkUnderLimit(result));
     result = initSelectList(result, { checked, isSpecial: listState.isSpecial });
     dispatchListState({ type: 'setList', value: result });
     dispatchListState({ type: 'allCurrentPage', value: checked });
     if (listState.beenGetAllData) {
       dispatchListState({ type: 'allPage', value: checked });
     }
-  }, [checkUnderLimit, dispatchListState, listState.beenGetAllData, listState.isSpecial]);
+  }, [dispatchListState, listState.beenGetAllData, listState.isSpecial]);
 
-  const getAllData = useCallback(() => {
+  const getAllData = useCallback((checked) => {
     toggleLoading(true);
     recrusiveGetData(600).then(res => {
       dispatchListState({ type: 'beenGetAll', value: true })
-      const checkList = res.map(item => {
+      let result = res.map(item => {
         return {
           ...item,
           checked: true,
           disable: false,
         }
       })
-      dispatchListState({ type: 'setList', value: checkList })
+      result = initSelectList(result, { checked, isSpecial: listState.isSpecial });
+      dispatchListState({ type: 'setList', value: result })
     }).finally(() => {
       toggleLoading(false);
     })
-  }, [dispatchListState])
+  }, [dispatchListState, listState.isSpecial])
 
   const sumSelectInfo = useCallback(() => {
 
@@ -106,12 +106,13 @@ export default function Demo4() {
       const result = currentListData.current.map(item => {
         return {
           ...item,
-          checked: false
+          checked: false,
+          disable:false,
         }
       })
       dispatchListState({ type: 'setList', value: result })
     } else {
-      getAllData();
+      getAllData(checked);
     }
   }, [dispatchListState, getAllData]);
 

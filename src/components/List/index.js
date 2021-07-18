@@ -51,15 +51,14 @@ export default function List(props) {
     })
     const isUnderLimit = checkUnderLimit(result);
     result = filterLimitList(result, isUnderLimit, {id, checked})
-
-
-
-    let isNotAllChecked;
+    let isNotAllChecked = false;
     if (listState.listData.length === 0) {
       isNotAllChecked = true;
     } else {
-      isNotAllChecked = listState.listData.some(item => {
-        return !item.checked
+      listState.listData.forEach(item=>{
+        if(!item.checked && !item.disable) {
+          isNotAllChecked = true
+        }
       })
     }
     if (listState.beenGetAllData) {
@@ -76,27 +75,30 @@ export default function List(props) {
 
   // 当前页全选状态切换
   useEffect(() => {
-    let isNotAllChecked;
+    let isNotAllChecked = false;
     if (listState.listData.length === 0) {
       isNotAllChecked = true;
     } else {
-      isNotAllChecked = listState.listData.some(item => {
-        return !item.checked
+      listState.listData.forEach(item=>{
+        if(!item.checked && !item.disable) {
+          isNotAllChecked = true
+        }
       })
     }
-    console.log('当前页全选状态切换')
     dispatchListState({ type: 'allCurrentPage', value: !isNotAllChecked });
   }, [dispatchListState, listState.listData]);
 
   // 单个订单取消导致全选取消
   useEffect(() => {
     if (currentSelectAll.current) {
-      let isNotAllChecked;
+      let isNotAllChecked = false
       if (listState.listData.length === 0) {
         isNotAllChecked = true;
       } else {
-        isNotAllChecked = listState.listData.some(item => {
-          return !item.checked
+        listState.listData.forEach(item=>{
+          if(!item.checked && !item.disable) {
+            isNotAllChecked = true
+          }
         })
       }
       dispatchListState({ type: 'allPage', value: !isNotAllChecked });
